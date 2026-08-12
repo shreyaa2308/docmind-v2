@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DocMind v2</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background:#10131a; color:#eef2ff; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; }
+    main { width:min(760px, calc(100vw - 32px)); height:min(780px, calc(100vh - 32px)); display:flex; flex-direction:column; background:#191d27; border:1px solid #30384a; border-radius:18px; overflow:hidden; box-shadow:0 18px 60px #0008; }
+    header { padding:18px 22px; background:#202635; font-weight:700; } header small { color:#9aa7c3; font-weight:400; margin-left:8px; }
+    #messages { flex:1; overflow:auto; padding:22px; display:flex; flex-direction:column; gap:16px; }
+    .message { max-width:85%; padding:12px 15px; border-radius:14px; white-space:pre-wrap; line-height:1.45; }
+    .user { align-self:flex-end; background:#4f46e5; } .assistant { align-self:flex-start; background:#292f3e; }
+    .sources { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; } .chip { font-size:.78rem; color:#bfdbfe; border:1px solid #475569; padding:3px 8px; border-radius:999px; }
+    form { display:flex; gap:10px; padding:16px; border-top:1px solid #30384a; } input { flex:1; min-width:0; border:1px solid #465168; border-radius:10px; padding:12px; background:#10131a; color:inherit; } button { border:0; border-radius:10px; padding:0 18px; background:#6366f1; color:white; font-weight:700; cursor:pointer; } button:disabled { opacity:.55; }
+    #upload-form { align-items:center; padding:10px 16px; border-top:1px solid #30384a; } #pdf-file { padding:8px; font-size:.84rem; } #upload-form button { padding:9px 14px; } #upload-status { min-height:1.2em; padding:0 16px 10px; color:#9aa7c3; font-size:.82rem; } #upload-status.error { color:#fca5a5; } #upload-status.success { color:#bfdbfe; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>DocMind v2 <small>Ask questions about your uploaded PDFs</small></header>
+    <section id="messages" aria-live="polite"><div class="message assistant">Upload a PDF through <code>/ingest</code>, then ask a question.</div></section>
+    <form id="upload-form">
+      <input id="pdf-file" type="file" accept="application/pdf,.pdf" aria-label="PDF file" required>
+      <button type="submit">Add PDF</button>
+    </form>
+    <div id="upload-status" role="status" aria-live="polite"></div>
+    <form id="query-form"><input id="question" aria-label="Question" placeholder="What would you like to know?" required><button>Ask</button></form>
+  </main>
+  <script>
+    const apiUrl = (localStorage.getItem('apiUrl') || window.location.origin).replace(/\/$/, '');
+    const form = document.querySelector('#query-form'), input = document.querySelector('#question'), messages = document.querySelector('#messages'), button = form.querySelector('button');
+    const uploadForm = document.querySelector('#upload-form'), pdfFile = document.querySelector('#pdf-file'), uploadButton = uploadForm.querySelector('button'), uploadStatus = document.querySelector('#upload-status');
+    const add = (text, kind, sources = []) => {
+      const el = document.createElement('div'); el.className = `message ${kind}`; el.textContent = text;
+      if (sources.length) { const box = document.createElement('div'); box.className = 'sources'; sources.forEach(s => { const chip = document.createElement('span'); chip.className = 'chip'; chip.textContent = `${s.source} · p.${s.page} · ${s.content_type}`; box.append(chip); }); el.append(box); }
+      messages.append(el); messages.scrollTop = messages.scrollHeight;
+    };
+    form.addEventListener('submit', async event => {
+      event.preventDefault(); const question = input.value.trim(); if (!question) return;
+      add(question, 'user'); input.value = ''; button.disabled = true;
+      try { const response = await fetch(`${apiUrl}/query`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question}) }); const data = await response.json(); if (!response.ok) throw new Error(data.detail || 'Request failed'); add(data.answer, 'assistant', data.sources || []); }
+      catch (error) { add(`Error: ${error.message}`, 'assistant'); }
+      finally { button.disabled = false; input.focus(); }
+    });
+    uploadForm.addEventListener('submit', async event => {
+      event.preventDefault(); const file = pdfFile.files[0]; if (!file) return;
+      uploadStatus.className = ''; uploadStatus.textContent = 'Uploading...'; uploadButton.disabled = true;
+      try { const body = new FormData(); body.append('file', file); const response = await fetch(`${apiUrl}/ingest`, { method:'POST', body }); const data = await response.json(); if (!response.ok) throw new Error(data.detail || 'Upload failed'); uploadStatus.className = 'success'; uploadStatus.textContent = `Added ${file.name} — you can now ask about it`; pdfFile.value = ''; }
+      catch (error) { uploadStatus.className = 'error'; uploadStatus.textContent = error.message; }
+      finally { uploadButton.disabled = false; }
+    });
+  </script>
+</body>
+</html>

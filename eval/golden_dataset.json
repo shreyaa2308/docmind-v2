@@ -1,0 +1,34 @@
+[
+  {
+    "question": "What BLEU score did the Transformer achieve on the WMT 2014 English-to-German translation task?",
+    "ground_truth": "The Transformer (big) model achieved a BLEU score of 28.4 on the WMT 2014 English-to-German translation task."
+  },
+  {
+    "question": "What BLEU score did the Transformer achieve on the WMT 2014 English-to-French translation task?",
+    "ground_truth": "The Transformer (big) model achieved a BLEU score of 41.8 on the WMT 2014 English-to-French translation task."
+  },
+  {
+    "question": "What are the two sub-layers in each encoder layer?",
+    "ground_truth": "Each encoder layer has a multi-head self-attention mechanism and a position-wise fully connected feed-forward network."
+  },
+  {
+    "question": "How many layers are in the encoder and decoder stacks?",
+    "ground_truth": "Both the encoder and decoder are composed of a stack of 6 identical layers."
+  },
+  {
+    "question": "What is the dimensionality of the model, d_model, used in the base Transformer?",
+    "ground_truth": "The base model uses d_model = 512."
+  },
+  {
+    "question": "How many attention heads are used in the multi-head attention of the base model?",
+    "ground_truth": "The base model uses 8 parallel attention heads (h = 8)."
+  },
+  {
+    "question": "What optimizer did the authors use for training?",
+    "ground_truth": "They used the Adam optimizer with beta1 = 0.9, beta2 = 0.98, and epsilon = 10^-9."
+  },
+  {
+    "question": "What regularization techniques are applied during training?",
+    "ground_truth": "The paper applies residual dropout and label smoothing (with a value of 0.1) during training."
+  }
+]
