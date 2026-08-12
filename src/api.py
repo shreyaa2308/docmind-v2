@@ -87,8 +87,8 @@ def health() -> dict:
 
 
 @app.get("/")
-def frontend():
-    return FileResponse(Path("frontend/index.html"))
+def root():
+    return {"status": "DocMind v2 API is running", "docs": "/docs"}
 
 
 @app.post("/ingest")
